@@ -20,7 +20,7 @@ public class CreateItem {
         Table table = dynamoDB.getTable(tableName);
 
         Item item = Item.fromMap(mapItens);
-        itemPk.forEach(item::withPrimaryKey);
+        //itemPk.forEach(item::withPrimaryKey);
 
         PutItemOutcome putItemOutcome= table.putItem(item);
 

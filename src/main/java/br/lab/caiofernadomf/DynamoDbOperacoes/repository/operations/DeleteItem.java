@@ -6,11 +6,13 @@ import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ConditionalOperator;
 import com.amazonaws.services.dynamodbv2.model.DeleteItemRequest;
+import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
 import com.amazonaws.services.dynamodbv2.xspec.Condition;
 import com.amazonaws.services.dynamodbv2.xspec.DeleteItemExpressionSpec;
 import com.amazonaws.services.dynamodbv2.xspec.ExpressionSpecBuilder;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class DeleteItem {
@@ -23,16 +25,22 @@ public class DeleteItem {
         DynamoDB dynamoDB = new DynamoDB(amazonDynamoDB);
         Table table = dynamoDB.getTable(tableName);
 
+        List<KeySchemaElement> keySchemaElementList=
+                table.describe().getKeySchema();
+
+        PrimaryKey primaryKey = new PrimaryKey();
+
         Map mapaItem = GetItem.getItem(amazonDynamoDB,tableName,keyName,keyValue);
 
-        DeleteItemSpec deleteItemSpec = new DeleteItemSpec().withPrimaryKey(keyName,keyValue,"ip",mapaItem.get("ip"));
-
-        DeleteItemOutcome deleteItemOutcome=null;
         if(!mapaItem.isEmpty()){
 
-            deleteItemOutcome= table.deleteItem(deleteItemSpec);
+            keySchemaElementList.forEach(k-> primaryKey.addComponent(k.getAttributeName(),mapaItem.get(k.getAttributeName())));
 
-            return deleteItemOutcome.getItem().asMap();
+            DeleteItemSpec deleteItemSpec = new DeleteItemSpec().withPrimaryKey(primaryKey);
+
+            table.deleteItem(deleteItemSpec);
+
+            return mapaItem;
         }
 
         return new HashMap();
